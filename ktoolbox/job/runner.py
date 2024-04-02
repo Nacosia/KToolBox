@@ -103,6 +103,14 @@ class JobRunner:
             # Run task
             task_done_set, _ = await asyncio.wait([task], return_when=asyncio.FIRST_EXCEPTION)
             task_done = task_done_set.pop()
+            completed_jobs = self.done_size + 1
+            total_jobs = self.done_size + self.waiting_size
+            logger.info(
+                generate_msg(
+                    f"Job progress({completed_jobs}/{total_jobs})",
+                    filename=job.alt_filename
+                )
+            )
             try:
                 exception = task_done.exception()
             except CancelledError as e:
