@@ -1,5 +1,7 @@
 from datetime import datetime
 from typing import Optional, List, Generator, Any, Tuple
+import hashlib
+import json
 
 from loguru import logger
 from pathvalidate import sanitize_filename
@@ -89,3 +91,49 @@ def filter_posts_by_indices(posts: List[Post], indices: CreatorIndices) -> Tuple
     for post in new_list:
         new_indices.posts[post.id] = post
     return new_list, new_indices
+
+def json_hash(d, sorted_list=False):
+    """
+    Calculate the hash value of a JSON object.
+
+    Parameters:
+    - d: The JSON object to calculate the hash for.
+    - about_list: A boolean indicating whether the hash should consider the order of list elements.
+
+    Returns:
+    - The hash value of the JSON object.
+    """
+
+    def sort_list(l):
+        for i, v in enumerate(l):
+            if isinstance(v, dict):
+                l[i] = f"dict-{hash_dict(v)}"
+            elif isinstance(v, list):
+                l[i] = sort_list(v)
+        if sorted_list:
+            return sorted(l, key=lambda x: (str(type(x)), x))
+        return l
+        
+    def hash_list(l):
+        return hashlib.sha256(json.dumps(sort_list(l)).encode()).hexdigest()
+
+    def hash_dict(d):
+        for k, v in d.items():
+            if isinstance(v, dict):
+                d[k] = f"dict-{hash_dict(v)}"
+            elif isinstance(v, list):
+                d[k] = sort_list(v)
+        return hashlib.sha256(json.dumps(d, sort_keys=True).encode()).hexdigest()
+    
+    def hash_value(v):
+        return hashlib.sha256(str(v).encode()).hexdigest()
+    
+    def hash_json(json_data):
+        if isinstance(json_data, dict):
+            return hash_dict(json_data)
+        elif isinstance(json_data, list):
+            return hash_list(json_data)
+        else:
+            return hash_value(json_data)
+    
+    return hash_json(d)

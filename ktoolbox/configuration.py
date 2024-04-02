@@ -147,6 +147,8 @@ class JobConfiguration(BaseModel):
     post_structure: PostStructureConfiguration = PostStructureConfiguration()
     mix_posts: bool = False
     sequential_filename: bool = False
+    archive_postdata: bool = False
+    archive_postdata_path: Path = Path("./.ktoolbox/postdata_archive")
 
     # job_list_filepath: Optional[Path] = None
     # """Filepath for job list data saving, ``None`` for disable job list saving"""

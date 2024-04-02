@@ -10,7 +10,7 @@ from pathvalidate import sanitize_filename, is_valid_filename
 
 from ktoolbox._enum import PostFileTypeEnum, DataStorageNameEnum
 from ktoolbox.action import ActionRet, fetch_creator_posts, FetchInterruptError
-from ktoolbox.action.utils import generate_post_path_name, filter_posts_by_time
+from ktoolbox.action.utils import generate_post_path_name, filter_posts_by_time, json_hash
 from ktoolbox.api.model import Post, Attachment
 from ktoolbox.configuration import config, PostStructureConfiguration
 from ktoolbox.job import Job, CreatorIndices
@@ -82,6 +82,16 @@ async def create_job_from_post(
     if content_path and post.content:
         async with aiofiles.open(content_path, "w", encoding=config.downloader.encoding) as f:
             await f.write(post.content)
+    if config.job.archive_postdata:
+        post_hash = json_hash(post, sorted_list=True)
+        archive_path = config.job.archive_postdata_path.joinpath(f"{post.user}")
+        archive_path.mkdir(exist_ok=True, parents=True)
+        async with aiofiles.open(
+                archive_path / f"{post.id}_{post_hash[:8]}.json",
+                "w",
+                encoding="utf-8"
+        ) as f:
+            await f.write(post.model_dump_json())
     if dump_post_data:
         async with aiofiles.open(str(post_path / DataStorageNameEnum.PostData.value), "w", encoding="utf-8") as f:
             await f.write(
