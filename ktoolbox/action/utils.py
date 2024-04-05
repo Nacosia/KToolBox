@@ -26,7 +26,9 @@ def generate_post_path_name(post: Post) -> str:
                     title=post.title,
                     added=post.added.strftime(time_format) if post.added else "",
                     published=post.published.strftime(time_format) if post.published else "",
-                    edited=post.edited.strftime(time_format) if post.edited else ""
+                    edited=post.edited.strftime(time_format) if post.edited else "",
+                    latest_edit=post.edited.strftime(time_format) if post.edited \
+                        else (post.published.strftime(time_format) if post.published else "")
                 )
             )
         except KeyError as e:
